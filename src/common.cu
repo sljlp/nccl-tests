@@ -1087,7 +1087,13 @@ double test_memcpy(size_t size, int loop){
 
   return 0;
 }
-
+/*
+./build/broadcast_perf memcpy  $((1024*1024*1024)) 100 $dev
+arg1: memcpy or other
+arg2: bytes size
+arg3: loop number
+arg4: device id
+*/
 int main(int argc, char* argv[]){
   if (argc == 5 && strcmp(argv[1], "memcpy") == 0){
     int size;
