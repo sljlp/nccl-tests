@@ -1065,11 +1065,50 @@ testResult_t run() {
     exit(EXIT_SUCCESS);
 }
 
+double test_memcpy_multiply(size_t size, int loop, int multiply){
+  char ** hbuffer = new char*[multiply];
+  char ** dbuffer = new char*[multiply];
+  for (int i = 0; i< multiply; i++){
+    hbuffer[i] = (char*) malloc(size);
+    cudaMalloc(&dbuffer[i], size);
+    
+  }
+
+  for (int i = 0; i < 5; i++){
+    for (int j = 0; j< multiply; j++){
+      CUDACHECK(cudaMemcpy(dbuffer[j], hbuffer[j], size, cudaMemcpyHostToDevice));
+    }
+  }
+  
+  CUDACHECK(cudaDeviceSynchronize());
+  timer tim;
+  for (int i = 0; i < loop; i++){
+    for (int j = 0; j< multiply; j++){
+      CUDACHECK(cudaMemcpy(dbuffer[j], hbuffer[j], size, cudaMemcpyHostToDevice));
+    }
+  }
+
+  CUDACHECK(cudaDeviceSynchronize());
+  double ela = tim.elapsed();
+
+  for (int i = 0; i< multiply; i++){
+    free(hbuffer[i]);
+    CUDACHECK(cudaFree(dbuffer[i]));
+  }
+
+  delete []hbuffer;
+  delete []dbuffer;
+
+  double spe = (double)size * loop * multiply / ela / (1024*1024*1024);
+  printf("total size: %.0f Bytes, time: %f s, loop: %d, multipy: %d, %f GBytes/s\n",(double)size * loop * multiply, ela, loop, multiply, spe);
+  return 0;
+
+}
+
 double test_memcpy(size_t size, int loop){
   void* hbuffer = malloc(size);
   void* dbuffer[1];
   CUDACHECK(cudaMalloc(&dbuffer[0], size));
-  CUDACHECK(cudaDeviceSynchronize());
   for (int i = 0; i < 5; i++){
     CUDACHECK(cudaMemcpy(dbuffer[0], hbuffer, size, cudaMemcpyHostToDevice));
   }
@@ -1095,15 +1134,18 @@ arg3: loop number
 arg4: device id
 */
 int main(int argc, char* argv[]){
-  if (argc == 5 && strcmp(argv[1], "memcpy") == 0){
+  if (argc == 6 && strcmp(argv[1], "memcpy") == 0){
     int size;
     int loop;
     int dev;
+    int multi;
     sscanf(argv[2], "%d", &size);
     sscanf(argv[3], "%d", &loop);
-    sscanf(argv[4], "%d", &dev);
+    sscanf(argv[4], "%d", &multi);
+    sscanf(argv[5], "%d", &dev);
     CUDACHECK(cudaSetDevice(dev));
-    test_memcpy((size_t)size, loop);
+    // test_memcpy((size_t)size, loop);
+    test_memcpy_multiply((size_t)size, loop, multi);
     return 0;
   }else{
     return main_(argc, argv);
