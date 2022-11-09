@@ -657,7 +657,7 @@ testResult_t AllocateBuffs(void **sendbuff, size_t sendBytes, void **recvbuff, s
 
 testResult_t run(); // Main function
 
-int main(int argc, char* argv[]) {
+int main_(int argc, char* argv[]) {
   // Make sure everyline is flushed so that we see the progress of the test
   setlinebuf(stdout);
 
@@ -1063,4 +1063,44 @@ testResult_t run() {
     exit(EXIT_FAILURE);
   else
     exit(EXIT_SUCCESS);
+}
+
+double test_memcpy(size_t size, int loop){
+  void* hbuffer = malloc(size);
+  void* dbuffer[1];
+  CUDACHECK(cudaMalloc(&dbuffer[0], size));
+  CUDACHECK(cudaDeviceSynchronize());
+  for (int i = 0; i < 5; i++){
+    CUDACHECK(cudaMemcpy(dbuffer[0], hbuffer, size, cudaMemcpyHostToDevice));
+  }
+  CUDACHECK(cudaDeviceSynchronize());
+  timer tim;
+  for (int i = 0; i < loop; i++){
+    CUDACHECK(cudaMemcpy(dbuffer[0], hbuffer, size, cudaMemcpyHostToDevice));
+  }
+  CUDACHECK(cudaDeviceSynchronize());
+  double ela = tim.elapsed();
+  free(hbuffer);
+  CUDACHECK(cudaFree(dbuffer[0]));
+  double spe = size * loop / ela / (1024*1024*1024);
+  printf("total size: %d, time: %f, loop: %d, %f GBytes/s\n",size * loop, ela, loop, spe);
+
+  return 0;
+}
+
+int main(int argc, char* argv[]){
+  if (argc == 5 && strcmp(argv[1], "memcpy") == 0){
+    int size;
+    int loop;
+    int dev;
+    sscanf(argv[2], "%d", &size);
+    sscanf(argv[3], "%d", &loop);
+    sscanf(argv[4], "%d", &dev);
+    CUDACHECK(cudaSetDevice(dev));
+    test_memcpy((size_t)size, loop);
+    return 0;
+  }else{
+    return main_(argc, argv);
+  }
+  return 0;
 }
