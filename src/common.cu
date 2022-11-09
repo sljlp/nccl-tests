@@ -1100,7 +1100,7 @@ double test_memcpy_multiply(size_t size, int loop, int multiply){
   delete []dbuffer;
 
   double spe = (double)size * loop * multiply / ela / (1024*1024*1024);
-  printf("total size: %.0f Bytes, time: %f s, loop: %d, multipy: %d, %f GBytes/s\n",(double)size * loop * multiply, ela, loop, multiply, spe);
+  printf("total size: %.0f GBytes, time: %f s, loop: %d, multipy: %d, %f GBytes/s\n",(double)size * loop * multiply/1024/1024/1024, ela, loop, multiply, spe);
   return 0;
 
 }
@@ -1145,7 +1145,7 @@ int main(int argc, char* argv[]){
     sscanf(argv[5], "%d", &dev);
     CUDACHECK(cudaSetDevice(dev));
     // test_memcpy((size_t)size, loop);
-    test_memcpy_multiply((size_t)size, loop, multi);
+    test_memcpy_multiply((size_t)size*1024*1024*1024, loop, multi);
     return 0;
   }else{
     return main_(argc, argv);
