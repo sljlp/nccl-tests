@@ -1075,7 +1075,7 @@ double test_memcpy_multiply(size_t size, int loop, int multiply){
     
   }
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 20; i++){
     for (int j = 0; j< multiply; j++){
       CUDACHECK(cudaMemcpy(dbuffer[j], hbuffer[j], size, cudaMemcpyHostToDevice));
     }
@@ -1088,9 +1088,15 @@ double test_memcpy_multiply(size_t size, int loop, int multiply){
       CUDACHECK(cudaMemcpy(dbuffer[j], hbuffer[j], size, cudaMemcpyHostToDevice));
     }
   }
-
   CUDACHECK(cudaDeviceSynchronize());
   double ela = tim.elapsed();
+
+  for (int i = 0; i < 20; i++){
+    for (int j = 0; j< multiply; j++){
+      CUDACHECK(cudaMemcpy(dbuffer[j], hbuffer[j], size, cudaMemcpyHostToDevice));
+    }
+  }
+  
 
   for (int i = 0; i< multiply; i++){
     free(hbuffer[i]);
