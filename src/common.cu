@@ -1070,7 +1070,8 @@ double test_memcpy_multiply(size_t size, int loop, int multiply){
   char ** dbuffer = new char*[multiply];
   for (int i = 0; i< multiply; i++){
     hbuffer[i] = (char*) malloc(size);
-    cudaMalloc(&dbuffer[i], size);
+    // cudaMalloc(&dbuffer[i], size);
+    CUDACHECK(cudaHostAlloc(&dbuffer[i], size, cudaHostAllocMapped));
     
   }
 
@@ -1093,7 +1094,8 @@ double test_memcpy_multiply(size_t size, int loop, int multiply){
 
   for (int i = 0; i< multiply; i++){
     free(hbuffer[i]);
-    CUDACHECK(cudaFree(dbuffer[i]));
+    // CUDACHECK(cudaFree(dbuffer[i]));
+    CUDACHECK(cudaFreeHost(dbuffer[i]));
   }
 
   delete []hbuffer;
